@@ -1,0 +1,59 @@
+name: Seoul Bike Pipeline CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings.
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+  dbt-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Install dbt
+      run: |
+        pip install dbt-core dbt-postgres
+        
+    - name: Check dbt project structure (Parse Only)
+      env:
+        # Dummy variables to satisfy profiles.yml validation
+        POSTGRES_HOST: localhost
+        POSTGRES_USER: dummy
+        POSTGRES_PASSWORD: dummy
+        POSTGRES_DB: dummy
+        POSTGRES_PORT: 5432
+      run: |
+        cd dbt_seoul_bike
+        # 'dbt parse' checks for YAML syntax errors and model validity without connecting to DB
+        dbt parse --profiles-dir .
