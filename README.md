@@ -1,5 +1,6 @@
 # 🚲 Seoul Bike Flow (Data Engineering Pipeline)
 
+![Seoul Bike Pipeline CI](https://github.com/ImJeongBright/dEProject/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
 ![Airflow](https://img.shields.io/badge/Apache%20Airflow-2.9.1-orange?logo=apache-airflow&logoColor=white)
 ![dbt](https://img.shields.io/badge/dbt-Core-FF694B?logo=dbt&logoColor=white)
