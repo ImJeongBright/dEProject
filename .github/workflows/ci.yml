@@ -47,13 +47,14 @@ jobs:
         
     - name: Check dbt project structure (Parse Only)
       env:
-        # Dummy variables to satisfy profiles.yml validation
+        # Using GitHub Secrets for secure credential management
+        # Even for 'dbt parse', it's good practice to map these
         POSTGRES_HOST: localhost
-        POSTGRES_USER: dummy
-        POSTGRES_PASSWORD: dummy
-        POSTGRES_DB: dummy
+        POSTGRES_USER: ${{ secrets.DB_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        POSTGRES_DB: bike_warehouse
         POSTGRES_PORT: 5432
       run: |
         cd dbt_seoul_bike
-        # 'dbt parse' checks for YAML syntax errors and model validity without connecting to DB
+        # If secrets are not set in GitHub, dbt might warn about empty config, but 'parse' often succeeds.
         dbt parse --profiles-dir .
