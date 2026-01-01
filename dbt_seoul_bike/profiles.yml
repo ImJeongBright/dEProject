@@ -1,0 +1,12 @@
+seoul_bike:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      threads: 1
+      host: "{{ env_var('POSTGRES_HOST', 'localhost') }}"
+      port: "{{ env_var('POSTGRES_PORT', 5432) | int }}"
+      user: "{{ env_var('POSTGRES_USER', 'airflow') }}"
+      pass: "{{ env_var('POSTGRES_PASSWORD', 'airflow') }}"
+      dbname: "{{ env_var('POSTGRES_DB', 'bike_warehouse') }}"
+      schema: public

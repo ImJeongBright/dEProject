@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: seoul_bike
+    schema: raw_data
+    tables:
+      - name: bike_realtime
+      - name: weather_realtime

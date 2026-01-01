@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_bike_realtime
+    description: "Staged real-time bike data with type casting and cleaning."
+    columns:
+      - name: bike_status_id
+        description: "Surrogate Primary Key (Station ID + Timestamp)."
+        tests:
+          - unique
+          - not_null
+
+      - name: station_id
+        description: "Unique identifier for each station."
+        tests:
+          - not_null
+
+      - name: rack_count
+        description: "Total rack count of the station."
+        tests:
+          - is_non_negative
