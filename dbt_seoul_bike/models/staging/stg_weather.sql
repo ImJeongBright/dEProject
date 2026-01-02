@@ -5,11 +5,11 @@ with source as (
 ranked as (
     select
         *,
-        -- Create a timestamp for forecast target time for easier joining
+
         to_timestamp(fcst_date || fcst_time, 'YYYYMMDDHH24MI') as fcst_timestamp,
-        -- Rank to find the latest prediction for a given target time
+
         row_number() over (
-            partition by fcst_date, fcst_time, category 
+            partition by fcst_date, fcst_time, category
             order by base_date desc, base_time desc
         ) as rn
     from source

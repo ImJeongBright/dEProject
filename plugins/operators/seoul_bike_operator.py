@@ -8,10 +8,10 @@ import logging
 
 class SeoulBikeToPostgresOperator(BaseOperator):
     """
-    Operator that fetches Seoul Bike data using SeoulApiHook 
+    Operator that fetches Seoul Bike data using SeoulApiHook
     and loads it into PostgreSQL using PostgresHook in an idempotent way.
     """
-    
+
     def __init__(
         self,
         postgres_conn_id: str = 'postgres_default',
@@ -27,29 +27,29 @@ class SeoulBikeToPostgresOperator(BaseOperator):
         self.batch_size = batch_size
 
     def execute(self, context):
-        # 1. Init Hook and Fetch Data
-        execution_date = context['execution_date'] # Logical date from Airflow
+
+        execution_date = context['execution_date']
         self.log.info(f"Starting ETL for execution_date: {execution_date}")
-        
+
         api_hook = SeoulApiHook()
         all_data_frames = []
-        
-        # Initial fetch to determine count
+
+
         start = 1
         first_batch = api_hook.fetch_data('bikeList', start, self.batch_size)
-        
+
         if 'rentBikeStatus' not in first_batch:
             self.log.error("Invalid API Response structure.")
             return
 
         total_count = int(first_batch['rentBikeStatus'].get('list_total_count', 0))
         self.log.info(f"Total rows to fetch: {total_count}")
-        
-        # Process first batch
+
+
         df = self._process_data(first_batch, execution_date)
         all_data_frames.append(df)
 
-        # Retrieve remaining pages
+
         for next_start in range(self.batch_size + 1, total_count + 1, self.batch_size):
             next_end = min(next_start + self.batch_size - 1, total_count)
             batch_data = api_hook.fetch_data('bikeList', next_start, next_end)
@@ -61,8 +61,8 @@ class SeoulBikeToPostgresOperator(BaseOperator):
             return
 
         final_df = pd.concat(all_data_frames, ignore_index=True)
-        
-        # 2. Load to Postgres (Idempotent)
+
+
         self._load_to_postgres(final_df, execution_date)
 
     def _process_data(self, data: dict, execution_date) -> pd.DataFrame:
@@ -82,21 +82,20 @@ class SeoulBikeToPostgresOperator(BaseOperator):
             'stationId': 'station_id'
         }
         df.rename(columns=rename_map, inplace=True)
-        
-        # Consistent timestamping
-        # execution_date from context is Pendulum object, convert to string or datetime for pandas
+
+
         df['execution_date'] = pd.to_datetime(str(execution_date))
-        
+
         return df
 
     def _load_to_postgres(self, df: pd.DataFrame, execution_date):
         pg_hook = PostgresHook(postgres_conn_id=self.postgres_conn_id)
         engine = pg_hook.get_sqlalchemy_engine()
-        
-        # Ensure schema exists and delete old data
+
+
         with engine.begin() as conn:
             conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {self.schema};"))
-            
+
             self.log.info(f"Removing existing data for execution_date: {execution_date}")
             delete_query = text(f"DELETE FROM {self.schema}.{self.table_name} WHERE execution_date = :exec_date")
             conn.execute(delete_query, {"exec_date": str(execution_date)})

@@ -15,7 +15,7 @@ WITH raw_data AS (
 
 SELECT
     DISTINCT
-    -- Create a surrogate key for uniqueness testing across time
+
     station_id || '-' || CAST(created_at AS VARCHAR) as bike_status_id,
     station_id,
     station_name,

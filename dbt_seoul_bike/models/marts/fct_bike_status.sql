@@ -13,8 +13,8 @@ SELECT
     s.station_id,
     s.rack_count,
     s.bike_count,
-    -- Calculate usage rate (avoid division by zero)
-    CASE 
+
+    CASE
         WHEN s.rack_count = 0 THEN 0
         ELSE (s.bike_count::float / s.rack_count::float) * 100
     END as load_rate

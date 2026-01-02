@@ -14,37 +14,37 @@ def mapToGrid(lat, lon, code=0):
         dict: {'x': grid_x, 'y': grid_y} (code=0)
               {'lat': lat, 'lng': lon} (code=1)
     """
-    
-    # 기상청 투영 상수 설정
-    RE = 6371.00877     # 지구 반경(km)
-    GRID = 5.0          # 격자 간격(km)
-    SLAT1 = 30.0        # 투영 위도1(degree)
-    SLAT2 = 60.0        # 투영 위도2(degree)
-    OLON = 126.0        # 기준 점 경도(degree)
-    OLAT = 38.0         # 기준 점 위도(degree)
-    XO = 43             # 기준 점 X좌표(GRID)
-    YO = 136            # 기준 점 Y좌표(GRID)
 
-    # LCC 공식 적용을 위한 상수 계산
+
+    RE = 6371.00877
+    GRID = 5.0
+    SLAT1 = 30.0
+    SLAT2 = 60.0
+    OLON = 126.0
+    OLAT = 38.0
+    XO = 43
+    YO = 136
+
+
     DEGRAD = math.pi / 180.0
     RADDEG = 180.0 / math.pi
-    
+
     re = RE / GRID
     slat1 = SLAT1 * DEGRAD
     slat2 = SLAT2 * DEGRAD
     olon = OLON * DEGRAD
     olat = OLAT * DEGRAD
-    
+
     sn = math.tan(math.pi * 0.25 + slat2 * 0.5) / math.tan(math.pi * 0.25 + slat1 * 0.5)
     sn = math.log(math.cos(slat1) / math.cos(slat2)) / math.log(sn)
     sf = math.tan(math.pi * 0.25 + slat1 * 0.5)
     sf = math.pow(sf, sn) * math.cos(slat1) / sn
     ro = math.tan(math.pi * 0.25 + olat * 0.5)
     ro = re * sf / math.pow(ro, sn)
-    
+
     rs = {}
-    
-    if code == 0:  # Lat/Lon -> Grid
+
+    if code == 0:
         ra = math.tan(math.pi * 0.25 + lat * DEGRAD * 0.5)
         ra = re * sf / math.pow(ra, sn)
         theta = lon * DEGRAD - olon
@@ -53,14 +53,14 @@ def mapToGrid(lat, lon, code=0):
         if theta < -math.pi:
             theta += 2.0 * math.pi
         theta *= sn
-        
+
         x = (ra * math.sin(theta)) + XO + 0.5
         y = (ro - ra * math.cos(theta)) + YO + 0.5
-        
+
         rs['x'] = int(x)
         rs['y'] = int(y)
-        
-    else:  # Grid -> Lat/Lon
+
+    else:
         xn = lat - XO
         yn = ro - lon + YO
         ra = math.sqrt(xn * xn + yn * yn)
@@ -68,7 +68,7 @@ def mapToGrid(lat, lon, code=0):
             ra = -ra
         alat = math.pow((re * sf / ra), (1.0 / sn))
         alat = 2.0 * math.atan(alat) - math.pi * 0.5
-        
+
         if math.fabs(xn) <= 0.0:
             theta = 0.0
         else:
@@ -78,17 +78,16 @@ def mapToGrid(lat, lon, code=0):
                     theta = -theta
             else:
                 theta = math.atan2(xn, yn)
-                
+
         alon = theta / sn + olon
         rs['lat'] = alat * RADDEG
         rs['lng'] = alon * RADDEG
-        
+
     return rs
 
 if __name__ == "__main__":
-    # Test with Seoul City Hall coordinates
-    # Expected: approx NX=60, NY=127 for typical Seoul center, 
-    # but let's see what this specific projection yields for 37.5665, 126.9780
+
+
     seoul_lat = 37.5665
     seoul_lon = 126.9780
     result = mapToGrid(seoul_lat, seoul_lon)
